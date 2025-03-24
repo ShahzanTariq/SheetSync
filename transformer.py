@@ -45,7 +45,7 @@ class Transformer:
                 hash = int(m.hexdigest(), base=16) 
                 if self.check_hashDict(hash):
                     print(line + "is already in master.csv")
-                    df = df.drop(index  = i)
+                    df = df.drop(index = i)
                 else:
                     self.append_hashDict(df[i])
                     df.loc[i, 'Hash'] = hash

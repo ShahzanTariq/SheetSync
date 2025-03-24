@@ -2,6 +2,15 @@ import pandas as pd
 import csv
 import hashlib
 
+#Global Variable to store hash dictionary
+hash_dict = {}
+
+# This should be run when program compiles
+def precheck_hash_dupe():
+    global hash_dict
+    df = pd.read_csv("master.csv")
+    hash_dict.update(df.set_index('Hash').to_dict('index')) # key is the hash and values are the rest of the columns
+
 
 class Transformer:
     def __init__(self, card_name: str, date_col: int, amount_col: int, description_col: int, category_col: int, header: bool):
@@ -16,12 +25,13 @@ class Transformer:
     def reformat_csv(self, inputCSV):
         df = pd.read_csv(inputCSV, usecols = self.cols, skiprows=1, header=None)
         df = df[[self.date_col, self.amount_col, self.description_col, self.category_col]]
-        df[4] = self.card_name  # Card Name Column
-        df[5] = pd.NA   # Hash Column
-        self.append_hash(inputFile, df)
+        df.insert(4, 'Card Name', self.card_name)    # Insert at index 4, name it "Card Name"
+        df.insert(5, 'Hash', pd.NA)   
+        df = self.append_hash(inputCSV, df) # Returns df with hashes and no duplicates
         df.to_csv("master.csv", mode='a', header = False, index = False) #mode = 'a' will append, and header should be false when appending. Index gets rid of df indexes
 
-    # Helper to reformat_csv(). Adds Hashes to each row
+
+    # Helper to reformat_csv(). Adds Hashes to each row and removes duplicates based on hash
     def append_hash(self, inputCSV, df):
         i=0
         with open(inputCSV, "r") as f:
@@ -32,9 +42,37 @@ class Transformer:
                 line = str(line)
                 str_bytes = bytes(line, "UTF-8")
                 m = hashlib.md5(str_bytes)
-                final = int(m.hexdigest(), base=16) 
-                df.loc[i, 5] = final
+                hash = int(m.hexdigest(), base=16) 
+                if self.check_hashDict(hash):
+                    print(line + "is already in master.csv")
+                    df = df.drop(index  = i)
+                else:
+                    self.append_hashDict(df[i])
+                    df.loc[i, 'Hash'] = hash
                 i+=1
+        return df
+    
+    # Checks if new Hash is in hash dict
+    def check_hashDict(self, new_hash):
+        global hash_dict
+        if new_hash in hash_dict:
+            return False
+        else:
+            return True
+
+    # Adds any successful line's hash to global hash_dict
+    def append_hashDict(self, new_data):
+        global hash_dict
+        new_hash = new_data('Hash')
+        if new_hash in hash_dict:
+            print("hash already here??")
+            return
+        dataAdd = new_data.drop('Hash')
+        hash_dict[new_hash]= dataAdd.to_dict()
+
+
+
+precheck_hash_dupe() #KEEP THIS BEFORE EVERYTHING ELSE
 
 inputFile = "test.csv"
 tdCard = Transformer(card_name="TD", date_col=1, amount_col=4,description_col=3,category_col=6, header=True)

@@ -15,3 +15,13 @@ class masterUtil:
             self.current_row_index += 1
             return self.get_current_row() 
         return None # If its out of bound (will change)
+    
+    def get_rows(self):
+        rows = self.master_df.reset_index()
+        rows_filtered = rows[rows['Completion']==0].to_dict(orient='records')
+        return rows_filtered
+
+
+# test = masterUtil()
+# array = test.get_rows()
+# print(array)

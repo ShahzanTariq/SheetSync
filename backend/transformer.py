@@ -27,6 +27,7 @@ class Transformer:
         df = df[[self.date_col, self.amount_col, self.description_col, self.category_col]]
         df.insert(4, 'Card Name', self.card_name)    # Insert at index 4, name it "Card Name"
         df.insert(5, 'Hash', pd.NA)   
+        df.insert(6, 'Completion', 0)
         df = self.append_hash(inputCSV, df) # Returns df with hashes and no duplicates
         df.to_csv("master.csv", mode='a', header = False, index = False) #mode = 'a' will append, and header should be false when appending. Index gets rid of df indexes
 
@@ -47,25 +48,25 @@ class Transformer:
                     print(line + "is already in master.csv")
                     df = df.drop(index = i)
                 else:
-                    self.append_hashDict(df[i])
                     df.loc[i, 'Hash'] = hash
+                    self.append_hashDict(df.loc[i])
                 i+=1
         return df
     
     # Checks if new Hash is in hash dict
     def check_hashDict(self, new_hash):
         global hash_dict
-        if new_hash in hash_dict:
-            return False
-        else:
+        if str(new_hash) in hash_dict:
             return True
+        else:
+            return False
 
     # Adds any successful line's hash to global hash_dict
     def append_hashDict(self, new_data):
         global hash_dict
-        new_hash = new_data('Hash')
+        new_hash = new_data['Hash']
         if new_hash in hash_dict:
-            print("hash already here??")
+            print("append_hashDict: new hash is already in hash_dict")
             return
         dataAdd = new_data.drop('Hash')
         hash_dict[new_hash]= dataAdd.to_dict()
@@ -74,6 +75,7 @@ class Transformer:
 
 precheck_hash_dupe() #KEEP THIS BEFORE EVERYTHING ELSE
 
-inputFile = "test.csv"
-tdCard = Transformer(card_name="TD", date_col=1, amount_col=4,description_col=3,category_col=6, header=True)
-tdCard.reformat_csv(inputFile)
+# inputFile = "test.csv"
+# tdCard = Transformer(card_name="TD", date_col=1, amount_col=4,description_col=3,category_col=6, header=True)
+# tdCard.reformat_csv(inputFile)
+

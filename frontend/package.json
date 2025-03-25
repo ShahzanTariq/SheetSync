@@ -19,7 +19,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "backend": "cd ../backend && uvicorn main:app --reload",
+    "backend": "cd ../backend && uvicorn main:app",
     "dev": "concurrently \"npm start\" \"npm run backend\""
   },
   "eslintConfig": {

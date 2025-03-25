@@ -34,11 +34,10 @@ def read_root():
 
 @app.post("/addMaster")
 async def upload_csv(file: UploadFile = File(...), card: str = Form (...)):
-    print(type(file))
     contents = await file.read()
-    file = BytesIO(contents)
+    file_bytes = BytesIO(contents)
     if card == "TD":
-        TD_account(file)
+        TD_account(file_bytes)
         return JSONResponse(content={"message": f"File {file.filename} uploaded successfully for {card} card."})
     else:
         return JSONResponse(

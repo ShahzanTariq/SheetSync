@@ -2,6 +2,7 @@ import pandas as pd
 import csv
 import hashlib
 from dateutil import parser
+import io
 
 #Global Variable to store hash dictionary
 hash_dict = {}
@@ -37,22 +38,22 @@ class Transformer:
     # Helper to reformat_csv(). Adds Hashes to each row and removes duplicates based on hash
     def append_hash(self, inputCSV, df):
         i=0
-        with open(inputCSV, "r") as f:
-            reader = csv.reader(f, delimiter="\t")
-            if (self.header):
-                next(reader)
-            for line in reader:
-                line = str(line)
-                str_bytes = bytes(line, "UTF-8")
-                m = hashlib.md5(str_bytes)
-                hash = int(m.hexdigest(), base=16) 
-                if self.check_hashDict(hash):
-                    print(line + "is already in master.csv")
-                    df = df.drop(index = i)
-                else:
-                    df.loc[i, 'Hash'] = hash
-                    self.append_hashDict(df.loc[i])
-                i+=1
+        start_index = 0
+        file_content = inputCSV.getvalue().decode("utf-8")
+        lines = file_content.splitlines()
+        if (self.header):
+            start_index = 1
+        for line in lines[start_index:]:
+            str_bytes = bytes(line, "UTF-8")
+            m = hashlib.md5(str_bytes)
+            hash = int(m.hexdigest(), base=16) 
+            if self.check_hashDict(hash):
+                print(line + "is already in master.csv")
+                df = df.drop(index = i)
+            else:
+                df.loc[i, 'Hash'] = hash
+                self.append_hashDict(df.loc[i])
+            i+=1
         return df
     
     def standardize_date(self, date_str):
@@ -76,7 +77,12 @@ class Transformer:
             print("append_hashDict: new hash is already in hash_dict")
             return
         dataAdd = new_data.drop('Hash')
-        hash_dict[new_hash]= dataAdd.to_dict()
+        hash_dict[str(new_hash)]= dataAdd.to_dict()
+        print(hash_dict)
 
 
+# precheck_hash_dupe() #KEEP THIS BEFORE EVERYTHING ELSE
 
+# inputFile = "test.csv"
+# tdCard = Transformer(card_name="TD", date_col=1, amount_col=4,description_col=3,category_col=6, header=True)
+# tdCard.reformat_csv(inputFile)

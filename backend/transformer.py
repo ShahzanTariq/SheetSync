@@ -1,6 +1,7 @@
 import pandas as pd
 import csv
 import hashlib
+from dateutil import parser
 
 #Global Variable to store hash dictionary
 hash_dict = {}
@@ -29,6 +30,7 @@ class Transformer:
         df.insert(5, 'Hash', pd.NA)   
         df.insert(6, 'Completion', 0)
         df = self.append_hash(inputCSV, df) # Returns df with hashes and no duplicates
+        df[self.date_col] = df[self.date_col].apply(self.standardize_date)
         df.to_csv("master.csv", mode='a', header = False, index = False) #mode = 'a' will append, and header should be false when appending. Index gets rid of df indexes
 
 
@@ -53,6 +55,11 @@ class Transformer:
                 i+=1
         return df
     
+    def standardize_date(self, date_str):
+        parsed_date = parser.parse(date_str)
+        return parsed_date.strftime("%A, %B %d, %Y")
+
+
     # Checks if new Hash is in hash dict
     def check_hashDict(self, new_hash):
         global hash_dict
@@ -75,7 +82,7 @@ class Transformer:
 
 precheck_hash_dupe() #KEEP THIS BEFORE EVERYTHING ELSE
 
-# inputFile = "test.csv"
-# tdCard = Transformer(card_name="TD", date_col=1, amount_col=4,description_col=3,category_col=6, header=True)
-# tdCard.reformat_csv(inputFile)
+inputFile = "test.csv"
+tdCard = Transformer(card_name="TD", date_col=1, amount_col=4,description_col=3,category_col=6, header=True)
+tdCard.reformat_csv(inputFile)
 

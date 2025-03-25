@@ -1,17 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { Table, Checkbox } from '@mantine/core';
+import React, { useState } from "react";
+import { Table, Checkbox, Button, Stack } from '@mantine/core';
 
-const MasterTable = () => {
-    const [tableData, setTableData] = useState([]);
+const MasterTable = ({ tableData, onDataUpdate }) => {
     const [selectedRows, setSelectedRows] = useState([]);
 
-    useEffect(() => {
-        fetch("http://127.0.0.1:8000/getMaster")
-          .then((res) => {return res.json();})
-          .then((data) => setTableData(data))
-          .catch((error) => console.error("Error fetching:", error));
-    }, [])
 
+    const handleShahzan = async () => {
+      try{
+        const response = await fetch("http://127.0.0.1:8000/updateCompletion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ hash: selectedRows }),
+        });
+        if (response.ok){
+          onDataUpdate();
+          setSelectedRows([]);
+        }
+      } 
+      catch (error){
+        alert("Error updating completion")
+      }
+    }
+    
     
     const rows  = tableData.map((tableData) => (
         <Table.Tr
@@ -40,19 +52,23 @@ const MasterTable = () => {
     ));
 
     return(
+      <Stack>
         <Table>
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th />
-          <Table.Th>Transaction Date</Table.Th>
-          <Table.Th>Amount</Table.Th>
-          <Table.Th>Description</Table.Th>
-          <Table.Th>Category</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>{rows}</Table.Tbody>
-    </Table>
-
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th />
+              <Table.Th>Transaction Date</Table.Th>
+              <Table.Th>Amount</Table.Th>
+              <Table.Th>Description</Table.Th>
+              <Table.Th>Category</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>{rows}</Table.Tbody>
+        </Table>
+        <Button onClick={handleShahzan} disabled={!selectedRows}>
+          Shahzan Sheet
+        </Button>
+      </Stack>
     )
 
 };

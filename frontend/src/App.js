@@ -7,16 +7,32 @@ const App = () => {
   const [file, setFile] = useState(null);
   const [filename, setFilename] = useState("");
   const [card, setCard] = useState("");
-  
+  const [tableData, setTableData] = useState([]);
+
+  const fetchTableData = () => {
+    fetch("http://127.0.0.1:8000/getMaster")
+      .then(res => res.json())
+      .then(data => setTableData(data))
+      .catch(error => console.error("Error fetching:", error));
+  };
 
   useEffect(() => {
+    fetchTableData();
+  }, []);
+  
+
+  useEffect(() => { //Sample code
     fetch("http://127.0.0.1:8000/")
       .then((res) => res.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Error fetching:", error));
   }, []);
 
-  
+  const handleDataUpdate = () => {
+    console.log("data was updatd")
+    fetchTableData(); // Refetch data when called
+    console.log(tableData)
+  };
 
   const handleFileChange = (inputFile) => {
     if (!inputFile){
@@ -27,8 +43,6 @@ const App = () => {
       setFile(inputFile);
       setFilename(inputFile.name);
     }
-      
-    
   }
 
   const handleCardChange = (card) => {
@@ -51,6 +65,7 @@ const App = () => {
         return;
       }
       const result = await response.json();
+      handleDataUpdate();
       alert(result.message);
     } 
     catch (error){
@@ -82,7 +97,8 @@ const App = () => {
                 Add to master
               </Button>
             </Group>
-            <MasterTable/>
+            <MasterTable tableData={tableData} onDataUpdate={handleDataUpdate} />
+            
         </div>
       );
 };

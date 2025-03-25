@@ -3,6 +3,9 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from pydantic import BaseModel
+from typing import List
+
 from createCard import *
 from masterUtil import *
 from transformer import precheck_hash_dupe
@@ -24,6 +27,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 
@@ -50,4 +54,11 @@ async def get_master():
     util = masterUtil()
     return util.get_rows()
 
+class HashRequest(BaseModel):
+    hash: List[str] 
+
+@app.post("/updateCompletion")
+async def update_completion(request: HashRequest):
+    util = masterUtil()
+    util.update_completion(request.hash)
 

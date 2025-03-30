@@ -8,14 +8,25 @@ from typing import List
 
 from createCard import *
 from masterUtil import *
+from sheetUtil import *
 from transformer import precheck_hash_dupe
 from io import BytesIO
 
+google_service = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     precheck_hash_dupe()
     print("done checking hashes")
+
+    print("Authenticating Google Sheets...")
+    global google_service
+    google_service = authenticate_google_sheets()
+    if google_service:
+        print("Google Sheets authenticated.")
+    else:
+        print("ERROR: Failed to authenticate Google Sheets!")
+        google_service = None
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -54,11 +65,21 @@ async def get_master():
     util = masterUtil()
     return util.get_rows()
 
-class HashRequest(BaseModel):
-    hash: List[str] 
 
-@app.post("/updateCompletion")
-async def update_completion(request: HashRequest):
-    util = masterUtil()
-    util.update_completion(request.hash)
+class ItemDetail(BaseModel):
+    hash: str
+    transactionDate: str 
+    amount: float 
+    description: str
+    category: str
+
+
+@app.post("/updateCompletion/{sheetName}")
+async def update_completion(sheetName: str, request: ItemDetail):
+    tf = append_row_to_sheet(google_service, sheetName, request.transactionDate, request.amount, request.description, request.category )
+    if tf:
+        util = masterUtil()
+        util.update_completion(request.hash)
+    else:
+        print("google sheet thing didndt work")
 

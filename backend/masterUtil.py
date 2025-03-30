@@ -21,18 +21,12 @@ class masterUtil:
         rows_filtered = rows[rows['Completion']==0].to_dict(orient='records')
         return rows_filtered
     
-    def update_completion(self, hashes):
-        print(len(hashes))
-        for hash in hashes:
-            rowIndex = self.master_df[self.master_df['Hash'] == hash].index
-            print(rowIndex)
-            self.master_df.loc[rowIndex, 'Completion'] = 1
+    def update_completion(self, hash):
+        rowIndex = self.master_df[self.master_df['Hash'] == hash].index
+        self.master_df.loc[rowIndex, 'Completion'] = 1
         self.master_df.to_csv('master.csv', index = False)
         
     def test(self, list):
         print(list)
 
 
-# test = masterUtil()
-# array = test.get_rows()
-# print(array)

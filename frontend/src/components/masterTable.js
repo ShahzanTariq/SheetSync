@@ -1,5 +1,5 @@
 import React from "react"; 
-import { Table, Button, Stack } from '@mantine/core'; 
+import { Table, Button, Stack, Group } from '@mantine/core'; 
 const MasterTable = ({ tableData, onDataUpdate }) => {
     const handleAddRowToSheet = async (rowData, sheetName) => {
         const rowToUpdate = {
@@ -47,14 +47,33 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
             <Table.Td>{item.Category}</Table.Td>
 
             <Table.Td>
+              <Group gap = "xs">
                 <Button
-                    size="xs" 
-                    onClick={() => handleAddRowToSheet(item, 'Shahzan')} // Pass current row data and sheet name
-                >
-                    Add to Shahzan
-                </Button>
-                {/* Add more buttons here for other sheets if needed */}
-                {/* <Button size="xs" onClick={() => handleAddRowToSheet(item, 'OtherSheet')}>Add to Other</Button> */}
+                      size="xs" 
+                      onClick={() => handleAddRowToSheet(item, 'Shahzan')} // Pass current row data and sheet name
+                  >
+                      Shahzan
+                  </Button>
+                  <Button
+                      size="xs" 
+                      onClick={() => handleAddRowToSheet(item, 'Baba')} // Pass current row data and sheet name
+                  >
+                      Baba
+                  </Button>
+                  <Button
+                      size="xs" 
+                      onClick={() => handleAddRowToSheet(item, 'Mama')} // Pass current row data and sheet name
+                  >
+                      Mama
+                  </Button>
+                  <Button
+                      size="xs" 
+                      onClick={() => handleAddRowToSheet(item, 'Ishal')} // Pass current row data and sheet name
+                  >
+                      Ishal
+                  </Button>
+              </Group>
+                
             </Table.Td>
 
         </Table.Tr>

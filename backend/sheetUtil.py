@@ -9,6 +9,9 @@ import os
 
 load_dotenv()
 shahzan_sheetID = os.getenv("SHAHZAN_SHEETID")
+baba_sheetID = os.getenv("BABA_SHEETID")
+mama_sheetID = os.getenv("MAMA_SHEETID")
+ishal_sheetID = os.getenv("ISHAL_SHEETID")
 SERVICE_ACCOUNT_FILE = 'credentials.json'
 
 def authenticate_google_sheets():
@@ -95,4 +98,9 @@ def append_row_to_sheet(service, sheet_name: str, transactionDate:str, amount:fl
 def get_row(sheet_name, transactionDate, amount, description, category):
     if sheet_name == 'Shahzan':
         return [transactionDate, None, amount, description, category], "Eth!A:A", shahzan_sheetID
-    
+    if sheet_name == 'Baba':
+        return [transactionDate, -abs(amount), description, None, category], "Sheet1!A:A", baba_sheetID
+    if sheet_name == 'Mama':
+        return [transactionDate, None, amount, description, category], "Eth!A:A", mama_sheetID
+    if sheet_name == 'Ishal':
+        return [transactionDate, None, amount, description, category], "Eth!A:A", ishal_sheetID

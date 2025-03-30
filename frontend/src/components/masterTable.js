@@ -80,7 +80,7 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
     ));
 
     return (
-        <Stack>
+        <Stack m="md">
             <Table>
                 <Table.Thead>
                     <Table.Tr>

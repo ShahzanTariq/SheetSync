@@ -75,9 +75,9 @@ const App = () => {
 
     return (
         <div>
-            <h1>React + FastAPI</h1>
+            <h1>Google Sheet Helper</h1>
             <p>Message from backend: {message}</p>
-            <Group align="flex-end">
+            <Group align="flex-end" m="md">
               <FileInput 
                 accept=".csv"
                 label="Select CSV"

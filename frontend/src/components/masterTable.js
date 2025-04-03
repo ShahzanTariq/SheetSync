@@ -1,9 +1,24 @@
-import React from "react"; 
-import { Table, Button, Stack, Group, Tooltip, ActionIcon } from '@mantine/core'; 
+import React, {useState, useRef} from "react"; 
+import { Table, Button, Stack, Group, Tooltip, ActionIcon, Loader } from '@mantine/core'; 
 import {IconTrash} from '@tabler/icons-react';
 const MasterTable = ({ tableData, onDataUpdate }) => {
+    const [loadingRows, setLoadingRows] = useState(new Set());
+    const processingRef = useRef(new Set());
 
     const handleAddRowToSheet = async (rowData, sheetName) => {
+        const hash = rowData.Hash;
+        if (!hash || processingRef.current.has(hash)) {
+            console.log(`Action for hash ${hash} already in progress (Ref Lock). Ignoring click.`);
+            return;
+        }
+
+        // --- Acquire Ref Lock ---
+        processingRef.current.add(hash);
+
+        // --- Set State for Visual Feedback ---
+        setLoadingRows(prev => new Set(prev).add(hash));
+
+
         const rowToUpdate = {
             hash: rowData.Hash,
             transactionDate: rowData["Transaction Date"],
@@ -34,11 +49,29 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
         } catch (error) {
             alert(`Network or other error adding row (Hash: ${rowData.Hash}) to sheet ${sheetName}: ${error}`);
             console.error("Fetch error:", error);
+        } finally {
+            setLoadingRows(prev => {
+                const next = new Set(prev);
+                next.delete(hash);
+                return next;
+            });
         }
     };
 
     const handleIgnore = async (rowData) => {
         const hash = rowData.Hash
+
+        if (!hash || processingRef.current.has(hash)) {
+            console.log(`Action for hash ${hash} already in progress (Ref Lock). Ignoring click.`);
+            return;
+        }
+
+        // --- Acquire Ref Lock ---
+        processingRef.current.add(hash);
+        // --- Set State for Visual Feedback ---
+        setLoadingRows(prev => new Set(prev).add(hash));
+
+
         console.log(`Trying to ignoring data for hash ${rowData.Hash}`);
 
         try{
@@ -57,15 +90,24 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
         } catch (error){
             alert(`Error ignoring ${hash}`);
             console.error("Fetch error:", error);
+        } finally {
+            setLoadingRows(prev => {
+                const next = new Set(prev);
+                next.delete(hash);
+                return next;
+            });
         }
     }
 
 
     // Map data to table rows, including the new action button
-    const rows = tableData.map((item) => ( // Renamed loop variable for clarity
-        <Table.Tr
+    const rows = tableData.map((item) => { // Renamed loop variable for clarity
+        const isLoading = loadingRows.has(item.Hash);
+        return(
+            <Table.Tr
             key={item.index ?? item.Hash} 
         >
+            
             <Table.Td>{item["Transaction Date"]}</Table.Td>
             <Table.Td>{item.Amount}</Table.Td>
             <Table.Td>{item.Description}</Table.Td>
@@ -73,46 +115,23 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
 
             <Table.Td>
               <Group gap = "xs">
-                <Button
-                      size="xs" 
-                      onClick={() => handleAddRowToSheet(item, 'Shahzan')} // Pass current row data and sheet name
-                  >
-                      Shahzan
-                  </Button>
-                  <Button
-                      size="xs" 
-                      onClick={() => handleAddRowToSheet(item, 'Baba')} // Pass current row data and sheet name
-                  >
-                      Baba
-                  </Button>
-                  <Button
-                      size="xs" 
-                      onClick={() => handleAddRowToSheet(item, 'Mama')} // Pass current row data and sheet name
-                  >
-                      Mama
-                  </Button>
-                  <Button
-                      size="xs" 
-                      onClick={() => handleAddRowToSheet(item, 'Ishal')} // Pass current row data and sheet name
-                  >
-                      Ishal
-                  </Button>
-                  <Tooltip label="Ignore Transaction" color="red" withArrow>
-                                <ActionIcon
-                                    variant="subtle"
-                                    color="red"
-                                    onClick={() => handleIgnore(item)}
-                                    title="Ignore"
-                                >
-                                    <IconTrash size={16} />
-                                </ActionIcon>
-                            </Tooltip>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Shahzan')} disabled={isLoading}>Shahzan</Button>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Baba')} disabled={isLoading}>Baba</Button>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Mama')} disabled={isLoading}>Mama</Button>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Ishal')} disabled={isLoading}>Ishal</Button>
+                <Tooltip label="Ignore Transaction" color="red" withArrow>
+                    <ActionIcon variant="subtle" color="red" onClick={() => handleIgnore(item)} disabled={isLoading} title="Ignore">
+                        {isLoading ? <Loader size={16} type="dots" color="red" /> : <IconTrash size={16} />}
+                    </ActionIcon>
+                </Tooltip>
               </Group>
                 
             </Table.Td>
 
         </Table.Tr>
-    ));
+        )
+        
+    });
 
     return (
         <Stack m="md">

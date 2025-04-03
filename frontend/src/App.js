@@ -1,12 +1,11 @@
 // App.js
 import React, { useEffect, useState } from "react";
-import { FileInput, Select, Group, Button, Alert, List, Text } from '@mantine/core'; 
+import { FileInput, Select, Group, Button, Alert, List, Text, Title, Table, ScrollArea } from '@mantine/core'; 
 import MasterTable from "./components/masterTable";
 import { IconAlertCircle, IconCircleCheck, IconInfoCircle } from '@tabler/icons-react'; 
 
 
 const App = () => {
-  const [message, setMessage] = useState(""); // Backend root message
   const [file, setFile] = useState(null);
   const [card, setCard] = useState("");
   const [tableData, setTableData] = useState([]);
@@ -17,6 +16,7 @@ const App = () => {
       success: null, // boolean or null
       message: '',   // Main message from backend
       details: [],   // Detailed messages list from backend
+      duplicates: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,7 +65,6 @@ const App = () => {
 
     fetch(`${API_BASE_URL}/`)
       .then((res) => res.json())
-      .then((data) => setMessage(data.message))
       .catch((error) => console.error("Error fetching root message:", error));
 
   }, []);
@@ -77,19 +76,19 @@ const App = () => {
   };
 
   const handleFileChange = (inputFile) => {
-    setSubmitStatus({ success: null, message: '', details: [] }); // Clear previous status on new file select
+    setSubmitStatus({ success: null, message: '', details: [], duplicates: [] }); // Clear previous status on new file select
     setFile(inputFile);
   }
 
   const handleCardChange = (selectedCardValue) => {
-      setSubmitStatus({ success: null, message: '', details: [] }); // Clear previous status
+      setSubmitStatus({ success: null, message: '', details: [], duplicates: [] }); // Clear previous status
       setCard(selectedCardValue);
   }
 
   const handleAddMaster = async () => {
     if (!file || !card) return;
 
-    setSubmitStatus({ success: null, message: '', details: [] }); // Clear previous status
+    setSubmitStatus({ success: null, message: '', details: [], duplicates: [] }); // Clear previous status
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -111,17 +110,18 @@ const App = () => {
           console.error("Failed to parse JSON response:", jsonError);
           result = { // Create a default error structure
               message: `Server error (Status: ${response.status}). Check backend logs.`,
-              details: [`Response was not valid JSON.`]
+              details: [`Response was not valid JSON.`],
+              duplicates: []
           };
       }
 
 
       const success = response.ok; // Check if status code is 2xx
-
       setSubmitStatus({
           success: success,
           message: result.message || (success ? "Processing complete." : "Processing failed."),
-          details: Array.isArray(result.details) ? result.details : [] // Ensure details is always an array
+          details: Array.isArray(result.details) ? result.details : [], // Ensure details is always an array
+          duplicates: result.duplicate_rows
       });
 
       if (success) {
@@ -139,7 +139,8 @@ const App = () => {
         setSubmitStatus({
             success: false,
             message: "Network error or backend unavailable.",
-            details: [`Details: ${error.message}`]
+            details: [`Details: ${error.message}`],
+            duplicates: []
         });
     } finally {
         setIsSubmitting(false);
@@ -205,7 +206,7 @@ const App = () => {
                     title={submitStatus.success ? "Success!" : "Processing Issue"}
                     color={submitStatus.success ? "green" : "orange"} // Green for success, Orange for issues/errors
                     m="md"
-                    withCloseButton onClose={() => setSubmitStatus({ success: null, message: '', details: [] })} // Allow dismissal
+                    withCloseButton onClose={() => setSubmitStatus({ success: null, message: '', details: [], duplicates: [] })} // Allow dismissal
                 >
                     <Text fw={500} mb="xs">{submitStatus.message}</Text> {/* Display main message */}
                     {/* Display detailed messages if they exist */}
@@ -214,8 +215,34 @@ const App = () => {
                             {submitStatus.details.map((detail, index) => (
                                 <List.Item key={index}>{detail}</List.Item>
                             ))}
-                        </List>
+                        </List> 
                     )}
+                    {submitStatus.duplicates && submitStatus.duplicates.length > 0 && (
+                    <>
+                        <Title order={6} mb="xs" mt="md">Skipped Duplicate Rows:</Title>
+                        {/* You might not need Paper anymore, but ScrollArea is good */}
+                        <ScrollArea style={{ height: 150, border: '1px solid var(--mantine-color-gray-3)', borderRadius: 'var(--mantine-radius-sm)' }}> {/* Adjust height/style */}
+                            <Table fontSize="xs" striped withTableBorder withColumnBorders>
+                                <Table.Thead>
+                                    <Table.Tr>
+                                        {Object.keys(submitStatus.duplicates[0] || {}).map(key => (
+                                            <Table.Th key={key}>{key}</Table.Th>
+                                        ))}
+                                    </Table.Tr>
+                                </Table.Thead>
+                                <Table.Tbody>
+                                    {submitStatus.duplicates.map((row, index) => (
+                                        <Table.Tr key={row.Hash || index}>
+                                            {Object.entries(row).map(([key, value]) => (
+                                                <Table.Td key={key}>{String(value)}</Table.Td>
+                                            ))}
+                                        </Table.Tr>
+                                    ))}
+                                </Table.Tbody>
+                            </Table>
+                        </ScrollArea>
+                    </>
+                )}
                 </Alert>
              )}
 

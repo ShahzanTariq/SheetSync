@@ -140,14 +140,14 @@ class Transformer:
         # --- Hashing and Duplicate Removal ---
         inputCSV.seek(0)
         # Get back the filtered DataFrame and the messages from hashing
-        df_final, hash_messages = self.append_hash(inputCSV, df_ordered)
+        df_final, hash_messages, duplicate_rows = self.append_hash(inputCSV, df_ordered)
         all_messages.extend(hash_messages) # Add messages from append_hash
 
         if df_final.empty:
             msg = "No new transactions found after duplicate check."
             all_messages.append(msg)
             print(msg)
-            return True, all_messages # Success, but nothing to append
+            return True, all_messages, duplicate_rows # Success, but nothing to append
 
         # --- Final Formatting (Standardize Date) ---
         date_col_actual_name = map_original_index_to_actual_name.get(self.date_col)
@@ -189,11 +189,11 @@ class Transformer:
             print(error_msg)
             success = False # Mark as failed
 
-        return success, all_messages
+        return success, all_messages, duplicate_rows
 
 
     # Modified append_hash to return messages
-    def append_hash(self, inputCSV, df) -> Tuple[pd.DataFrame, List[str]]:
+    def append_hash(self, inputCSV, df) -> Tuple[pd.DataFrame, List[str], List]:
         """ Returns filtered DataFrame and a list of status messages. """
         global hash_dict
         messages = [] # Collect messages here
@@ -240,22 +240,25 @@ class Transformer:
 
 
             current_data_row_index += 1
-
-        # Add summary message about duplicates
+        
+        duplicate_rows = []
         if duplicate_count > 0:
             messages.append(f"Checked {processed_line_count} data lines: Found and skipped {duplicate_count} duplicate rows based on existing hashes.")
+            df_duplicates = df.loc[rows_to_drop].copy()
+            df_duplicates = df_duplicates.iloc[:, :-2] # Gets rid of Hash and Completion column
+            duplicate_rows = df_duplicates.to_dict(orient='records')
         else:
             messages.append(f"Checked {processed_line_count} data lines: No duplicates found based on existing hashes.")
-
+        
+        # Add summary message about duplicates
         if new_hashes_added_to_dict > 0:
              messages.append(f"Added {new_hashes_added_to_dict} new transaction hashes to the runtime dictionary.")
-
 
         # Drop rows marked as duplicates
         df_filtered = df.drop(index=rows_to_drop)
 
         # Return the filtered df and the collected messages
-        return df_filtered.reset_index(drop=True), messages
+        return df_filtered.reset_index(drop=True), messages, duplicate_rows
 
     # Keep standardize_date as is
     def standardize_date(self, date_str):

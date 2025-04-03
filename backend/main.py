@@ -101,7 +101,7 @@ async def upload_csv(file: UploadFile = File(...), card: str = Form(...)):
             skip_rows=config_for_card.get('skip_rows', 0)
         )
         # Capture success status and messages
-        success, processing_messages = transformer.reformat_csv(file_bytes)
+        success, processing_messages, duplicate_rows = transformer.reformat_csv(file_bytes)
 
         # Determine the main message based on success and content of messages
         main_message = f"File '{file.filename}' processed for {config_for_card.get('display_name', card)}."
@@ -116,11 +116,12 @@ async def upload_csv(file: UploadFile = File(...), card: str = Form(...)):
         if success and processing_messages and ("No new transactions found" in processing_messages[-1] or "Appended 0 new rows" in processing_messages[-1]):
              main_message = f"File '{file.filename}' processed. No new transactions were added."
 
-
+        print("FROM UPLOADCSV, this the type: ", type(duplicate_rows))
         return JSONResponse(
             content={
                 "message": main_message,
-                "details": processing_messages # Include the list of messages
+                "details": processing_messages, # Include the list of messages
+                "duplicate_rows": duplicate_rows
             }
         )
 

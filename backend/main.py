@@ -167,7 +167,7 @@ async def update_completion(sheetName: str, request: ItemDetail):
         raise HTTPException(status_code=503, detail="Google Sheets service unavailable.")
 
     # Pass data based on the ItemDetail model fields
-    tf = append_row_to_sheet(
+    data = append_row_to_sheet(
         google_service,
         sheetName,
         request.transactionDate, # Matches ItemDetail
@@ -175,7 +175,7 @@ async def update_completion(sheetName: str, request: ItemDetail):
         request.description,     # Matches ItemDetail
         request.category         # Matches ItemDetail (will be None if missing)
     )
-    if tf:
+    if data:
         util = masterUtil()
         # Assumes masterUtil.update_completion uses the 'Hash' string and 'Completion' column name internally
         util.update_completion(request.hash) # Pass hash from ItemDetail
@@ -186,4 +186,18 @@ async def update_completion(sheetName: str, request: ItemDetail):
         raise HTTPException(
             status_code=500,
             detail="Failed to update Google Sheet. Completion status not updated."
+        )
+    
+@app.post("/updateIgnore/{hash}")
+async def update_ignore(hash: str):
+    util = masterUtil()
+    success = util.update_ignore(hash)
+    if success:
+        print(f"Successfully ignored {hash}")
+        return {"message": "Ignored successfully."}
+    else:
+        print(f"Failed to ignore {hash}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to ignore row. Status not updated."
         )

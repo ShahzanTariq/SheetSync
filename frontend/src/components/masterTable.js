@@ -1,6 +1,8 @@
 import React from "react"; 
-import { Table, Button, Stack, Group } from '@mantine/core'; 
+import { Table, Button, Stack, Group, Tooltip, ActionIcon } from '@mantine/core'; 
+import {IconTrash} from '@tabler/icons-react';
 const MasterTable = ({ tableData, onDataUpdate }) => {
+
     const handleAddRowToSheet = async (rowData, sheetName) => {
         const rowToUpdate = {
             hash: rowData.Hash,
@@ -34,6 +36,29 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
             console.error("Fetch error:", error);
         }
     };
+
+    const handleIgnore = async (rowData) => {
+        const hash = rowData.Hash
+        console.log(`Trying to ignoring data for hash ${rowData.Hash}`);
+
+        try{
+            const response = await fetch(`http://127.0.0.1:8000/updateIgnore/${hash}`, {
+                method: "POST",
+            });
+
+            if (response.ok) {
+                console.log(`Successfully ignored data for hash ${rowData.Hash}.`);
+                onDataUpdate();
+            } else {
+                const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
+                alert(`Error ignoring ${hash}`);
+                console.error("Backend error:", errorData);
+            }
+        } catch (error){
+            alert(`Error ignoring ${hash}`);
+            console.error("Fetch error:", error);
+        }
+    }
 
 
     // Map data to table rows, including the new action button
@@ -72,6 +97,16 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
                   >
                       Ishal
                   </Button>
+                  <Tooltip label="Ignore Transaction" color="red" withArrow>
+                                <ActionIcon
+                                    variant="subtle"
+                                    color="red"
+                                    onClick={() => handleIgnore(item)}
+                                    title="Ignore"
+                                >
+                                    <IconTrash size={16} />
+                                </ActionIcon>
+                            </Tooltip>
               </Group>
                 
             </Table.Td>

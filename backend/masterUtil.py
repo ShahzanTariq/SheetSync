@@ -25,7 +25,17 @@ class masterUtil:
         rowIndex = self.master_df[self.master_df['Hash'] == hash].index
         self.master_df.loc[rowIndex, 'Completion'] = 1
         self.master_df.to_csv('master.csv', index = False)
-        
+
+    def update_ignore(self, hash):
+        try:
+            rowIndex = self.master_df[self.master_df['Hash'] == hash].index
+            self.master_df.loc[rowIndex, 'Completion'] = -1
+            self.master_df.to_csv('master.csv', index = False)
+            return True
+        except Exception as e:
+             print(f"Error ignoring transaction (setting completion to -1) for hash {hash}: {e}")
+             return False
+
     def test(self, list):
         print(list)
 

@@ -1,0 +1,24 @@
+
+{
+    "TD": {
+      "displayName": "TD Bank",
+      "transformerConfig": {
+        "dateColIndex": 1,       
+        "amountColIndex": 4,      
+        "descriptionColIndex": 3,  
+        "categoryColIndex": 6,     
+        "headerRowsToSkip": 1      
+        
+      }
+    },
+    "Rogers": {
+      "displayName": "Rogers Bank",
+       "transformerConfig": {
+        "dateColIndex": 0,
+        "amountColIndex": 5,
+        "descriptionColIndex": 2,
+        "categoryColIndex": null, 
+        "headerRowsToSkip": 0
+      }
+    }
+  }

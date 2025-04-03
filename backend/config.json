@@ -1,0 +1,21 @@
+
+{
+    "TD": {
+      "display_name": "TD Bank",
+      "date_col": 1,        
+      "amount_col": 4,       
+      "description_col": 3,  
+      "category_col": 6,  
+      "header": true,     
+      "skip_rows": 0          
+    },
+    "Rogers": {
+      "display_name": "Rogers Example (NOT REAL)",
+      "date_col": 0,
+      "amount_col": 5,
+      "description_col": 2,
+      "category_col": null,  
+      "header": true,
+      "skip_rows": 1         
+    }
+  }

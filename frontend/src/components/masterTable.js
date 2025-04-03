@@ -81,7 +81,7 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
 
     return (
         <Stack m="md">
-            <Table>
+            <Table striped>
                 <Table.Thead>
                     <Table.Tr>
                         <Table.Th>Transaction Date</Table.Th>

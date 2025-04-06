@@ -5,6 +5,7 @@
   "dependencies": {
     "@mantine/core": "^7.17.2",
     "@mantine/hooks": "^7.17.2",
+    "@tabler/icons-react": "^3.31.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
@@ -19,7 +20,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "backend": "cd ../backend && uvicorn main:app",
+    "backend": "cd ../backend && python -m uvicorn main:app",
     "dev": "concurrently \"npm start\" \"npm run backend\""
   },
   "eslintConfig": {

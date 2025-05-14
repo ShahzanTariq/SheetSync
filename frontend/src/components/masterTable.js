@@ -107,10 +107,10 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
 
             <Table.Td>
               <Group gap = "xs">
-                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Shahzan')} disabled={isLoading}>Shahzan</Button>
-                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Baba')} disabled={isLoading}>Baba</Button>
-                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Mama')} disabled={isLoading}>Mama</Button>
-                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Ishal')} disabled={isLoading}>Ishal</Button>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Primary')} disabled={isLoading}>Primary</Button>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Business')} disabled={isLoading}>Business</Button>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Secondary')} disabled={isLoading}>Secondary</Button>
+                <Button size="xs" onClick={() => handleAddRowToSheet(item, 'Joint')} disabled={isLoading}>Joint</Button>
                 <Tooltip label="Ignore Transaction" color="red" withArrow>
                     <ActionIcon variant="subtle" color="red" onClick={() => handleIgnore(item)} disabled={isLoading} title="Ignore">
                         {isLoading ? <Loader size={16} type="dots" color="red" /> : <IconTrash size={16} />}

@@ -1,25 +1,21 @@
-# transformer.py
 import pandas as pd
 import csv
 import hashlib
 from dateutil import parser
 import io
-import os # For checking file existence
+import os
 from typing import List, Tuple, Optional
 
 
-# Global Variable to store hash dictionary (Keep as is)
 hash_dict = {}
 
-# precheck_hash_dupe (Keep as is)
 def precheck_hash_dupe():
     global hash_dict
     try:
         df = pd.read_csv("master.csv")
-        # Ensure Hash column is string for consistent dictionary keys
         if 'Hash' in df.columns:
              df['Hash'] = df['Hash'].astype(str)
-             hash_dict.update(df.set_index('Hash').to_dict('index')) # key is the hash string
+             hash_dict.update(df.set_index('Hash').to_dict('index'))
              print(f"Preloaded {len(hash_dict)} hashes from master.csv")
         else:
              print("Warning: 'Hash' column not found in master.csv during precheck.")
@@ -34,41 +30,36 @@ def precheck_hash_dupe():
 
 
 class Transformer:
-    # UPDATED constructor to accept config values directly
     def __init__(self, card_name: str, date_col: int, amount_col: int, description_col: int, category_col: Optional[int], header: bool, skip_rows: int):
-        self.card_name = card_name # Display name from config
+        self.card_name = card_name
         self.header = header
-        self.date_col = date_col # Index from config
-        self.amount_col = amount_col # Index from config
-        self.description_col = description_col # Index from config
-        self.category_col = category_col # Index from config (might be None)
-        self.skip_rows = skip_rows # From config
+        self.date_col = date_col
+        self.amount_col = amount_col
+        self.description_col = description_col
+        self.category_col = category_col
+        self.skip_rows = skip_rows
 
-        # Define the columns to *read* from the input CSV based on config
+        # Build list of column indices to read from CSV
         self.cols_to_read = [self.date_col, self.amount_col, self.description_col]
         if self.category_col is not None:
             self.cols_to_read.append(self.category_col)
-        # Ensure indices are unique and sorted if needed by pandas
         self.cols_to_read = sorted(list(set(self.cols_to_read)))
 
-        # Define the structure expected when *writing* to master.csv (based on original code)
-        # These seem to be the intended final columns in order
-        self.output_date_col_name = self.date_col # Use original index as name? This seems brittle.
+        # Map column indices to output names for master.csv structure
+        self.output_date_col_name = self.date_col
         self.output_amount_col_name = self.amount_col
         self.output_desc_col_name = self.description_col
-        self.output_cat_col_name = self.category_col if self.category_col is not None else 'Category_Placeholder' # Need a name if category doesn't exist
-
-        # Let's stick *exactly* to original output structure logic:
-        # Read specific columns, keep their original index-based names (or header names),
-        # then insert 'Card Name', 'Hash', 'Completion'.
+        self.output_cat_col_name = self.category_col if self.category_col is not None else 'Category_Placeholder'
 
 
     def reformat_csv(self, inputCSV) -> Tuple[bool, List[str]]:
+        """Process CSV file and append new transactions to master.csv.
+        
+        Returns:
+            Tuple[bool, List[str], List]: (success, messages, duplicate_rows)
         """
-        Processes the CSV and returns a tuple: (success_status, list_of_messages).
-        """
-        all_messages = [] # Initialize list to collect messages
-        success = False # Track overall success
+        all_messages = []
+        success = False
 
         header_param = 0 if self.header else None
 
@@ -87,17 +78,15 @@ class Transformer:
             error_msg = f"Error reading CSV for card '{self.card_name}': {e}"
             all_messages.append(error_msg)
             print(error_msg) # Keep console log for server debugging
-            # return False, all_messages # Return immediately on read error
-            # Or re-raise if main.py should handle it:
-            raise e # Let main.py catch and handle HTTP response
+            raise e
 
         if df.empty:
             msg = f"No data read from CSV for card '{self.card_name}' (possibly empty or only skipped rows)."
             all_messages.append(msg)
             print(msg)
-            return True, all_messages # Considered success, but no data processed
+            return True, all_messages
 
-        # --- Column mapping and ordering (keep as before) ---
+        # Map CSV columns to expected order for master.csv
         actual_col_names = df.columns.tolist()
         map_original_index_to_actual_name = {}
         for i, actual_name in enumerate(actual_col_names):
@@ -107,7 +96,6 @@ class Transformer:
         cols_for_output_df = []
         if self.date_col in map_original_index_to_actual_name:
              cols_for_output_df.append(map_original_index_to_actual_name[self.date_col])
-        # ... (add amount_col, description_col logic) ...
         if self.amount_col in map_original_index_to_actual_name:
             cols_for_output_df.append(map_original_index_to_actual_name[self.amount_col])
         if self.description_col in map_original_index_to_actual_name:
@@ -124,7 +112,7 @@ class Transformer:
 
         df_ordered = df[cols_for_output_df].copy()
 
-        # --- Insert metadata columns (keep as before) ---
+        # Add metadata columns for tracking
         df_ordered.insert(4, 'Card Name', self.card_name)
         df_ordered.insert(5, 'Hash', pd.NA)
         df_ordered.insert(6, 'Completion', 0)
@@ -132,24 +120,22 @@ class Transformer:
         if 'temp_category_placeholder' in df_ordered.columns:
              output_category_col_name = category_col_actual_name if category_col_actual_name else 'Category'
              df_ordered = df_ordered.rename(columns={'temp_category_placeholder': output_category_col_name})
-             # Make sure the renamed category column exists if we need it later
              if output_category_col_name not in df_ordered.columns:
-                  df_ordered[output_category_col_name] = None # Add it back if rename failed somehow
+                  df_ordered[output_category_col_name] = None
 
 
-        # --- Hashing and Duplicate Removal ---
+        # Process hashing and remove duplicates
         inputCSV.seek(0)
-        # Get back the filtered DataFrame and the messages from hashing
         df_final, hash_messages, duplicate_rows = self.append_hash(inputCSV, df_ordered)
-        all_messages.extend(hash_messages) # Add messages from append_hash
+        all_messages.extend(hash_messages)
 
         if df_final.empty:
             msg = "No new transactions found after duplicate check."
             all_messages.append(msg)
             print(msg)
-            return True, all_messages, duplicate_rows # Success, but nothing to append
+            return True, all_messages, duplicate_rows
 
-        # --- Final Formatting (Standardize Date) ---
+        # Standardize date formatting
         date_col_actual_name = map_original_index_to_actual_name.get(self.date_col)
         if date_col_actual_name and date_col_actual_name in df_final.columns:
              try:
@@ -164,7 +150,7 @@ class Transformer:
              print(msg)
 
 
-        # --- Append to Master CSV ---
+        # Write processed data to master.csv
         master_file = "master.csv"
         file_exists = os.path.exists(master_file)
         is_empty = file_exists and os.path.getsize(master_file) == 0
@@ -181,22 +167,23 @@ class Transformer:
             print(success_msg)
             success = True
 
-            # Note: Hash dict update was moved inside append_hash in previous steps
-
         except Exception as e:
             error_msg = f"Error writing to {master_file}: {e}"
             all_messages.append(error_msg)
             print(error_msg)
-            success = False # Mark as failed
+            success = False
 
         return success, all_messages, duplicate_rows
 
 
-    # Modified append_hash to return messages
     def append_hash(self, inputCSV, df) -> Tuple[pd.DataFrame, List[str], List]:
-        """ Returns filtered DataFrame and a list of status messages. """
+        """Generate hashes for transactions and filter out duplicates.
+        
+        Returns:
+            Tuple[pd.DataFrame, List[str], List]: (filtered_df, messages, duplicate_rows)
+        """
         global hash_dict
-        messages = [] # Collect messages here
+        messages = []
         rows_to_drop = []
 
         lines_to_skip = self.skip_rows
@@ -215,11 +202,11 @@ class Transformer:
             if line_index < lines_to_skip:
                 continue
             if not line.strip():
-                 continue
+                continue
 
             if current_data_row_index >= len(df):
-                 messages.append(f"Warning: More lines in CSV than rows in DataFrame. Stopped processing at line {line_index + 1}.")
-                 break
+                messages.append(f"Warning: More lines in CSV than rows in DataFrame. Stopped processing at line {line_index + 1}.")
+                break
 
             processed_line_count += 1
             str_bytes = bytes(line, "UTF-8")
@@ -232,9 +219,7 @@ class Transformer:
                 duplicate_count += 1
             else:
                 df.loc[df.index[current_data_row_index], 'Hash'] = hash_key
-                # Add to runtime dictionary immediately *if* it's a new hash
                 self.append_hashDict(df.loc[df.index[current_data_row_index]])
-                # Check if it was actually added (append_hashDict has internal checks)
                 if hash_key in hash_dict:
                      new_hashes_added_to_dict +=1
 
@@ -245,22 +230,18 @@ class Transformer:
         if duplicate_count > 0:
             messages.append(f"Checked {processed_line_count} data lines: Found and skipped {duplicate_count} duplicate rows based on existing hashes.")
             df_duplicates = df.loc[rows_to_drop].copy()
-            df_duplicates = df_duplicates.iloc[:, :-2] # Gets rid of Hash and Completion column
+            df_duplicates = df_duplicates.iloc[:, :-2]
             duplicate_rows = df_duplicates.to_dict(orient='records')
         else:
             messages.append(f"Checked {processed_line_count} data lines: No duplicates found based on existing hashes.")
         
-        # Add summary message about duplicates
         if new_hashes_added_to_dict > 0:
              messages.append(f"Added {new_hashes_added_to_dict} new transaction hashes to the runtime dictionary.")
 
-        # Drop rows marked as duplicates
         df_filtered = df.drop(index=rows_to_drop)
 
-        # Return the filtered df and the collected messages
         return df_filtered.reset_index(drop=True), messages, duplicate_rows
 
-    # Keep standardize_date as is
     def standardize_date(self, date_str):
         try:
             if pd.isna(date_str) or date_str == '': return None
@@ -271,28 +252,21 @@ class Transformer:
              print(f"Error parsing date '{date_str}': {e}. Returning original.")
              return date_str
 
-    # Keep check_hashDict as is
     def check_hashDict(self, new_hash_str):
         global hash_dict
         return str(new_hash_str) in hash_dict
 
-    # Keep append_hashDict as is - it adds the row data to the runtime dict
-    # Ensure it uses the correct column names present in the row Series
     def append_hashDict(self, new_data_row_series):
         global hash_dict
-        new_hash = new_data_row_series.get('Hash') # Get hash from the row
+        new_hash = new_data_row_series.get('Hash')
         if pd.isna(new_hash):
              print("Warning: Trying to add row with NA hash to hash_dict. Skipping.")
              return
         new_hash_str = str(new_hash)
 
         if new_hash_str in hash_dict:
-            # This case should ideally not happen if check_hashDict was called before
-            # print(f"append_hashDict: hash {new_hash_str} already present.")
             return
 
-        # Store the row data (excluding Hash itself) in the dictionary
-        # The keys in the stored dict will be the column names from the Series
+        # Store row data in hash dictionary
         dataAdd = new_data_row_series.drop('Hash').to_dict()
         hash_dict[new_hash_str] = dataAdd
-        # print(f"Added hash {new_hash_str} to runtime hash_dict.")

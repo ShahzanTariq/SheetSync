@@ -12,12 +12,8 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
             return;
         }
 
-        // --- Acquire Ref Lock ---
         processingRef.current.add(hash);
-
-        // --- Set State for Visual Feedback ---
         setLoadingRows(prev => new Set(prev).add(hash));
-
 
         const rowToUpdate = {
             hash: rowData.Hash,
@@ -66,13 +62,9 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
             return;
         }
 
-        // --- Acquire Ref Lock ---
+
         processingRef.current.add(hash);
-        // --- Set State for Visual Feedback ---
         setLoadingRows(prev => new Set(prev).add(hash));
-
-
-        console.log(`Trying to ignoring data for hash ${rowData.Hash}`);
 
         try{
             const response = await fetch(`http://127.0.0.1:8000/updateIgnore/${hash}`, {
@@ -101,7 +93,7 @@ const MasterTable = ({ tableData, onDataUpdate }) => {
 
 
     // Map data to table rows, including the new action button
-    const rows = tableData.map((item) => { // Renamed loop variable for clarity
+    const rows = tableData.map((item) => { 
         const isLoading = loadingRows.has(item.Hash);
         return(
             <Table.Tr

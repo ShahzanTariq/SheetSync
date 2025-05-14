@@ -1,4 +1,3 @@
-// App.js
 import React, { useEffect, useState } from "react";
 import { FileInput, Select, Group, Button, Alert, List, Text, Title, Table, ScrollArea } from '@mantine/core'; 
 import MasterTable from "./components/masterTable";
@@ -11,11 +10,11 @@ const App = () => {
   const [tableData, setTableData] = useState([]);
   const [cardOptions, setCardOptions] = useState([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
-  const [error, setError] = useState(null); // General errors
-  const [submitStatus, setSubmitStatus] = useState({ // Consolidate submit feedback
-      success: null, // boolean or null
-      message: '',   // Main message from backend
-      details: [],   // Detailed messages list from backend
+  const [error, setError] = useState(null);
+  const [submitStatus, setSubmitStatus] = useState({
+      success: null,
+      message: '',
+      details: [],
       duplicates: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,10 +36,9 @@ const App = () => {
       });
   };
 
-  // Fetch Card Options for dropdown
   const fetchCardOptions = () => {
     setIsLoadingOptions(true);
-    setError(null); // Clear general errors related to options loading
+    setError(null);
     fetch(`${API_BASE_URL}/getCardOptions`)
       .then(res => {
         if (!res.ok) { throw new Error(`HTTP error! status: ${res.status}`); }
@@ -58,7 +56,6 @@ const App = () => {
       });
   };
 
-  // Initial data loading
   useEffect(() => {
     fetchTableData();
     fetchCardOptions();
@@ -76,19 +73,19 @@ const App = () => {
   };
 
   const handleFileChange = (inputFile) => {
-    setSubmitStatus({ success: null, message: '', details: [], duplicates: [] }); // Clear previous status on new file select
+    setSubmitStatus({ success: null, message: '', details: [], duplicates: [] });
     setFile(inputFile);
   }
 
   const handleCardChange = (selectedCardValue) => {
-      setSubmitStatus({ success: null, message: '', details: [], duplicates: [] }); // Clear previous status
+      setSubmitStatus({ success: null, message: '', details: [], duplicates: [] });
       setCard(selectedCardValue);
   }
 
   const handleAddMaster = async () => {
     if (!file || !card) return;
 
-    setSubmitStatus({ success: null, message: '', details: [], duplicates: [] }); // Clear previous status
+    setSubmitStatus({ success: null, message: '', details: [], duplicates: [] });
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -150,38 +147,31 @@ const App = () => {
     return (
         <div>
             <h1>Google Sheet Helper</h1>
-            {/* Optional: Keep the initial backend message if desired */}
-            {/* <p>Message from backend: {message}</p> */}
-
-            {/* Display General Errors (like loading options/master data) */}
             {error && (
                 <Alert icon={<IconAlertCircle size="1rem" />} title="Error!" color="red" m="md" withCloseButton onClose={() => setError(null)}>
                     {error}
                 </Alert>
             )}
 
-            {/* --- Input Group --- */}
             <Group align="flex-end" m="md">
               <FileInput
-                // ... (props as before)
                  accept=".csv"
                  label="Select CSV"
                  placeholder="Upload a CSV file"
                  description="Choose a .csv file to add to master.csv"
-                 value={file} // Control the component value
+                 value={file} 
                  onChange={handleFileChange}
                  style={{ minWidth: 250 }}
                  clearable
               />
               <Select
-                // ... (props as before)
                  label="Card Company"
                  placeholder="Select card type"
                  description = "Choose which company the csv is from"
-                 data={cardOptions} // <<< BIND TO FETCHED OPTIONS
-                 value={card} // Control the selected value
-                 onChange={handleCardChange} // Use the handler
-                 disabled={isLoadingOptions} // Disable while loading
+                 data={cardOptions} 
+                 value={card}
+                 onChange={handleCardChange} 
+                 disabled={isLoadingOptions}
                  searchable
                  nothingFoundMessage={isLoadingOptions ? "Loading..." : "No cards configured"}
                  clearable
@@ -195,8 +185,7 @@ const App = () => {
               </Button>
             </Group>
 
-             {/* --- Display Submission Status/Details --- */}
-             {submitStatus.message && ( // Only show if there's a message
+             {submitStatus.message && (
                 <Alert
                     icon={
                         submitStatus.success === true ? <IconCircleCheck size="1rem" /> :
@@ -208,7 +197,7 @@ const App = () => {
                     m="md"
                     withCloseButton onClose={() => setSubmitStatus({ success: null, message: '', details: [], duplicates: [] })} // Allow dismissal
                 >
-                    <Text fw={500} mb="xs">{submitStatus.message}</Text> {/* Display main message */}
+                    <Text fw={500} mb="xs">{submitStatus.message}</Text> 
                     {/* Display detailed messages if they exist */}
                     {submitStatus.details && submitStatus.details.length > 0 && (
                         <List size="sm" spacing="xs" mt="sm">
@@ -220,7 +209,6 @@ const App = () => {
                     {submitStatus.duplicates && submitStatus.duplicates.length > 0 && (
                     <>
                         <Title order={6} mb="xs" mt="md">Skipped Duplicate Rows:</Title>
-                        {/* You might not need Paper anymore, but ScrollArea is good */}
                         <ScrollArea style={{ height: 150, border: '1px solid var(--mantine-color-gray-3)', borderRadius: 'var(--mantine-radius-sm)' }}> {/* Adjust height/style */}
                             <Table fontSize="xs" striped withTableBorder withColumnBorders>
                                 <Table.Thead>
@@ -246,7 +234,6 @@ const App = () => {
                 </Alert>
              )}
 
-            {/* --- Master Table --- */}
             <MasterTable tableData={tableData} onDataUpdate={handleDataUpdate} />
 
         </div>

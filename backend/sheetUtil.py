@@ -1,9 +1,9 @@
 import os.path
 from google.auth.transport.requests import Request
-from google.oauth2.service_account import Credentials # Use service account credentials
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from typing import List # For type hinting
+from typing import List
 from dotenv import load_dotenv
 import os
 
@@ -48,7 +48,7 @@ def append_row_to_sheet(service, sheet_name: str, transactionDate:str, amount:fl
     """
     if not service:
         print("ERROR: Google Sheets service is not available.")
-        return False # Indicate failure
+        return False
     
 
     row_data, range, sheetID = get_row(sheet_name, transactionDate, amount, description, category)
@@ -59,11 +59,9 @@ def append_row_to_sheet(service, sheet_name: str, transactionDate:str, amount:fl
         return False
 
     try:
-        # Use the sheet_name for appending. The API finds the end of the data in that sheet.
         range_to_append = range
 
-        # Prepare the body for the API call
-        values_to_append = [row_data] # Data must be a list of lists
+        values_to_append = [row_data]
         body = {
             'values': values_to_append
         }
@@ -72,7 +70,7 @@ def append_row_to_sheet(service, sheet_name: str, transactionDate:str, amount:fl
         print(f"Row Data: {row_data}")
 
         result = service.spreadsheets().values().append(
-            spreadsheetId=sheetID, # Needs to be accessible (global or passed in)
+            spreadsheetId=sheetID,
             range=range_to_append,
             valueInputOption='USER_ENTERED',
             insertDataOption='INSERT_ROWS',

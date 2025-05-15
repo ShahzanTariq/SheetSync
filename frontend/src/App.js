@@ -146,7 +146,7 @@ const App = () => {
 
     return (
         <div>
-            <h1>Google Sheet Helper</h1>
+            <h1>SheetSync</h1>
             {error && (
                 <Alert icon={<IconAlertCircle size="1rem" />} title="Error!" color="red" m="md" withCloseButton onClose={() => setError(null)}>
                     {error}

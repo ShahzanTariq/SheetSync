@@ -36,7 +36,4 @@ class masterUtil:
              print(f"Error ignoring transaction (setting completion to -1) for hash {hash}: {e}")
              return False
 
-    def test(self, list):
-        print(list)
-
 

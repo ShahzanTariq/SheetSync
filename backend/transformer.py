@@ -77,7 +77,7 @@ class Transformer:
         except Exception as e:
             error_msg = f"Error reading CSV for card '{self.card_name}': {e}"
             all_messages.append(error_msg)
-            print(error_msg) # Keep console log for server debugging
+            print(error_msg)
             raise e
 
         if df.empty:

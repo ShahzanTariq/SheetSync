@@ -66,8 +66,6 @@ def append_row_to_sheet(service, sheet_name: str, transactionDate:str, amount:fl
             'values': values_to_append
         }
 
-        print(f"\nAttempting to append data to sheet: '{sheet_name}'")
-        print(f"Row Data: {row_data}")
 
         result = service.spreadsheets().values().append(
             spreadsheetId=sheetID,
@@ -77,10 +75,7 @@ def append_row_to_sheet(service, sheet_name: str, transactionDate:str, amount:fl
             body=body
         ).execute()
 
-        print(f"Append successful for row: {row_data}")
         updated_range = result.get('updates', {}).get('updatedRange')
-        if updated_range:
-            print(f"Data written to range: {updated_range}")
         return True
 
     except HttpError as err:

@@ -29,7 +29,6 @@ async def lifespan(app: FastAPI):
         card_config = {}
 
     precheck_hash_dupe()
-    print("done checking hashes")
     print("Authenticating Google Sheets...")
     google_service = authenticate_google_sheets()
     if google_service:
@@ -98,7 +97,6 @@ async def upload_csv(file: UploadFile = File(...), card: str = Form(...)):
         if success and processing_messages and ("No new transactions found" in processing_messages[-1] or "Appended 0 new rows" in processing_messages[-1]):
              main_message = f"File '{file.filename}' processed. No new transactions were added."
 
-        print("FROM UPLOADCSV, this the type: ", type(duplicate_rows))
         return JSONResponse(
             content={
                 "message": main_message,

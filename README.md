@@ -49,12 +49,23 @@ SheetSync is a lightweight web application that automates the process of importi
    SECONDARY_SHEETID=your_secondary_sheet_id
    JOINT_SHEETID=your_joint_sheet_id
    ```
+   
+   Replace the values with your actual Google Sheet IDs (found in the sheet URLs).
 
 5. **Add Google Service Account Credentials**
    
-   Place your `credentials.json` file in the backend directory.
+   Place your `credentials.json` file in the backend directory. This file contains your Google Service Account credentials and is required for API authentication.
 
-6. **Configure Bank Settings**
+6. **Create Master CSV File**
+   
+   Create an empty `master.csv` file in the backend directory with the following headers:
+   ```csv
+   Transaction Date,Amount,Description,Category,Card Name,Hash,Completion
+   ```
+   
+   This file serves as the transaction database and must exist before running the application.
+
+7. **Configure Bank Settings**
    
    Edit `backend/config.json` to match your bank's CSV format:
    ```json
